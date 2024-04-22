@@ -1,6 +1,6 @@
 import UIKit
 
-final class ViewController: UIViewController {
+final class MainViewController: UIViewController {
     // MARK: - Private properties
     
     private let titleLabel = UILabel()
@@ -74,6 +74,13 @@ final class ViewController: UIViewController {
         continueButton.addTarget(self, action: #selector(tappedContinueButton), for: .touchUpInside)
     }
     
-    @objc private func tappedAgainButton() {}
-    @objc private func tappedContinueButton() {}
+    @objc private func tappedAgainButton() {
+        let vc = GameViewController()
+        present(vc, animated: true)
+    }
+
+    @objc private func tappedContinueButton() {
+        let vc = GameViewController()
+        present(vc, animated: true)
+    }
 }
