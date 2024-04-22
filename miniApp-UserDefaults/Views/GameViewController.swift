@@ -6,6 +6,12 @@ final class GameViewController: UIViewController {
     private let attemptsLabel = UILabel()
     private let numberTextFiled = UITextField()
     private let checkButton = UIButton()
+    private let errorLabel = UILabel()
+    
+    // MARK: - Variables
+
+    var randomNumber = GameDefaultsManager.instance.getRandomNumber()
+    var counter = GameDefaultsManager.instance.getNumberOfAttempts()
     
     // MARK: - Lyfe cycle
 
@@ -13,12 +19,6 @@ final class GameViewController: UIViewController {
         super.viewDidLoad()
         setupBackground()
         setupUI()
-        print("open")
-    }
-    
-    override func viewDidDisappear(_ animated: Bool) {
-        super.viewDidDisappear(animated)
-        print("close")
     }
     
     // MARK: - Private methods
@@ -26,10 +26,12 @@ final class GameViewController: UIViewController {
     private func setupUI() {
         layoutAttemptsLabel()
         layoutNumberTextField()
+        layoutErrorLabel()
         layoutCheckButton()
         
         configureAttemptsLabel()
         configureNumberNextField()
+        configureErrorLabel()
         configureCheckButton()
     }
     
@@ -50,11 +52,19 @@ final class GameViewController: UIViewController {
         numberTextFiled.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.2).isActive = true
     }
     
+    private func layoutErrorLabel() {
+        view.addSubview(errorLabel)
+        errorLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        errorLabel.topAnchor.constraint(equalTo: numberTextFiled.bottomAnchor, constant: 3).isActive = true
+        errorLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+    }
+    
     private func layoutCheckButton() {
         view.addSubview(checkButton)
         checkButton.translatesAutoresizingMaskIntoConstraints = false
         
-        checkButton.topAnchor.constraint(equalTo: numberTextFiled.bottomAnchor, constant: 20).isActive = true
+        checkButton.topAnchor.constraint(equalTo: numberTextFiled.bottomAnchor, constant: 30).isActive = true
         checkButton.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
         checkButton.widthAnchor.constraint(equalTo: numberTextFiled.widthAnchor, multiplier: 1.5).isActive = true
     }
@@ -62,7 +72,7 @@ final class GameViewController: UIViewController {
     private func configureAttemptsLabel() {
         attemptsLabel.font = .systemFont(ofSize: 16, weight: UIFont.Weight.light)
         attemptsLabel.textColor = .black
-        attemptsLabel.text = "Количество попыток: "
+        attemptsLabel.text = "Количество попыток: \(counter)"
     }
     
     private func configureNumberNextField() {
@@ -80,5 +90,45 @@ final class GameViewController: UIViewController {
         checkButton.addTarget(self, action: #selector(tappedCheckbutton), for: .touchUpInside)
     }
     
-    @objc private func tappedCheckbutton() {}
+    private func configureErrorLabel() {
+        errorLabel.text = "* Попробуйте еще ..."
+        errorLabel.textColor = .systemRed
+        errorLabel.font = .systemFont(ofSize: 12, weight: UIFont.Weight.light)
+        errorLabel.isHidden = true
+    }
+    
+    private func showAlertController(title: String, message: String) {
+        let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        let action = UIAlertAction(title: "OK", style: .cancel) { _ in
+            self.dismiss(animated: true)
+        }
+        alertController.addAction(action)
+        present(alertController, animated: true)
+    }
+    
+    @objc private func tappedCheckbutton() {
+        guard let text = numberTextFiled.text, !text.isEmpty else { return }
+        guard let number = Int(text) else { return }
+        
+        counter += 1
+        
+        let game = Game(randomNumber: randomNumber, numberOfTextField: number, numberOfAttempts: counter)
+        attemptsLabel.text = "Количество попыток: \(counter)"
+        
+        if randomNumber != number {
+            GameDefaultsManager.instance.saveGame(game)
+            errorLabel.isHidden = false
+        } else {
+            errorLabel.text = "* Успешно!"
+            errorLabel.textColor = .systemGreen
+            if counter == 2 {
+                showAlertController(title: "Успех!", message: "Вы отгадали число со \(counter) попытки")
+            } else {
+                showAlertController(title: "Успех!", message: "Вы отгадали число с \(counter) попытки")
+            }
+            GameDefaultsManager.instance.removeGame()
+        }
+        print(game.randomNumber)
+        numberTextFiled.text = ""
+    }
 }

@@ -74,13 +74,30 @@ final class MainViewController: UIViewController {
         continueButton.addTarget(self, action: #selector(tappedContinueButton), for: .touchUpInside)
     }
     
+    private func showAlertController(title: String, message: String) {
+        let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        let action = UIAlertAction(title: "OK", style: .cancel) { _ in
+            self.dismiss(animated: true)
+        }
+        alertController.addAction(action)
+        present(alertController, animated: true)
+    }
+    
     @objc private func tappedAgainButton() {
+        GameDefaultsManager.instance.removeGame()
         let vc = GameViewController()
         present(vc, animated: true)
     }
 
     @objc private func tappedContinueButton() {
-        let vc = GameViewController()
-        present(vc, animated: true)
+        let counter = GameDefaultsManager.instance.getNumberOfAttempts()
+        if counter == 0 {
+            showAlertController(title: "Упс :(", message: "Ранее вы закончили игру, поэтому начните новую\nУдачи!")
+        } else {
+            let vc = GameViewController()
+            present(vc, animated: true)
+            vc.randomNumber = GameDefaultsManager.instance.loadGame()?.randomNumber ?? -1
+            vc.counter = GameDefaultsManager.instance.loadGame()?.numberOfAttempts ?? -1
+        }
     }
 }
